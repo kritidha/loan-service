@@ -5,6 +5,7 @@ import com.learning.microservices.loanservice.client.MemberClient;
 import com.learning.microservices.loanservice.model.Loan;
 import com.learning.microservices.loanservice.model.MemberResponse;
 import com.learning.microservices.loanservice.repository.LoanRepository;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -12,19 +13,21 @@ import org.springframework.web.client.RestTemplate;
 public class LoanService {
 
     private final LoanRepository loanRepository;
-    private final MemberClient memberClient;
+    private final MemberServiceAdapter memberServiceAdapter;
+
+
+
 
     public LoanService(LoanRepository loanRepository,
-                       MemberClient memberClient) {
+                       MemberServiceAdapter memberServiceAdapter) {
         this.loanRepository = loanRepository;
-        this.memberClient = memberClient;
+        this.memberServiceAdapter = memberServiceAdapter;
     }
 
     public Loan createLoan(Loan loan) {
 
         MemberResponse member =
-                memberClient.getMember(loan.getMemberId());
-
+                memberServiceAdapter.fetchMemberDetails(loan.getMemberId());
         if (member == null) {
             throw new RuntimeException("Member not found");
         }
